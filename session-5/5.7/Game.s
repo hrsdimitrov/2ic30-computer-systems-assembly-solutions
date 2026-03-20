@@ -5,7 +5,12 @@
 @ A simple random number guessing game
 .global main
 
-.equ SYS_EXIT, 1
+.equ SYS_EXIT, 0x01
+.equ SYS_READ, 0x03
+.equ SYS_WRITE, 0x04
+.equ SYS_GETTIME, 0x4E
+.equ STDOUT, 1
+.equ STDIN, 0
 
 .text
 
@@ -64,8 +69,8 @@ print:
         STMFD   SP!, {R7,LR}    	@ Push used registers and LR on the stack;
         MOV R2,R1                       @ Move number of characters to print(R1) to R2
         MOV R1, R0                      @ TASK: Move address of output string(R0) to R1
-        MOV R7, #4    			@ TASK: Put the Syscall number in R7
-        MOV R0, #1 		    	@ TASK: Put the monitor STDOUT in R0
+        MOV R7, #SYS_WRITE   			@ TASK: Put the Syscall number in R7
+        MOV R0, #STDOUT 		    	@ TASK: Put the monitor STDOUT in R0
         SWI 0                 	        @ TASK: Uncomment this line to make the syscall
         LDMFD   SP!, {R7,LR}    	@ Restore used registers (update SP with !)
         MOV     PC, LR          	@ Return
@@ -80,8 +85,8 @@ read:
         STMFD SP!, {R7, LR}     	@ Push used registers and LR to stack
         MOV R2,R1                        	@ TASK: Move number of characters to read(R1) to R2
         MOV R1, R0               	@ TASK: Move address of input string(R0) to R1
-        MOV R7, #3                        	@ TASK: Put the Syscall number in R?
-        MOV R0, #0                        	@ TASK: Put the keyboard STDIN in R?
+        MOV R7, #SYS_READ                        	@ TASK: Put the Syscall number in R?
+        MOV R0, #STDIN                        	@ TASK: Put the keyboard STDIN in R?
         SWI 0						@ TASK: Uncomment this line to make the syscall
         LDMFD SP!, {R7, LR}     	@ Restore used registers (update SP with !)
         MOV  PC, LR
@@ -169,7 +174,7 @@ gen_number:
         STMFD   SP!, {R1,R7,R8, LR}
         LDR R0, =time               @ TASK: Load address of time struct to R0
         MOV R1, #0                  @ TASK: Load 0 into R1 (time zone)
-        MOV R7, #0x4E                 @ TASK: Place system call number for gettimeofday in R7
+        MOV R7, #SYS_GETTIME                @ TASK: Place system call number for gettimeofday in R7
         SWI 0                       @ TASK: Make the system call
         LDR R8, =musecs             @ TASK: Load a register with address of musecs variable
         LDR R0, [R8]             @ TASK: Load R0 with the value at address of musecs
