@@ -42,11 +42,16 @@ next_guess:
         BL    print_hint        @ Print a hint
 
         CMP   R10, R8           @ If the guess was correct,
-        BEQ   exit             @   Exit
-        SUBS  R9, #1            @ Reduce the remaining guesses (!)
+        BEQ   extra_game             @   go to ask for an extra game
+        SUBS  R9, #1            @ ELSE Reduce the remaining guesses (!)
         BGT   next_guess        @ Try next guess if available
         MOV   R0, R8            @ Pass 'hidden' number as argument.
         BL    print_lose        @ No guess remaining, you lose.
+
+extra_game: 
+        BL play_again           @ Ask for another game.
+        CMP R0, #0              @ IF answer is not 'n'
+        BNE main                @   restart the game.
 
 exit:
     @ If using the RPI, uncomment the lines with the MOV and SWI instructions
@@ -58,6 +63,24 @@ exit:
     @ B       exit
 
 @ Functions
+
+@@@@ play_again: Ask the user if they wish to play again
+@ if the user enters 'n' the return value is 0
+play_again: 
+    STMFD SP!, {LR}                     @ Push used registers to the stack 
+    LDR R0, =again_prompt               @ Load play again prompt reference 
+    MOV R1, #again_prompt_len           @ Load play again prompt length 
+    BL    print                         @ Call print function 
+    LDR R0, =input                      @ Load the input reference 
+    MOV R1, #3                          @ Set the string length to read as 3 
+    BL read                             @ Call the input function 
+    LDR R1, =input                      @ Load the first byte of the inputted string to R0 - store the pointer to R1
+    LDR R0, [R1]                        @ Load the first byte of the inputted string to R0 - store the actual input in R0
+    AND R0, R0, #0xFF                   @ Load the first byte of the inputted string to R0 - take only the first bit by removing the last 3
+    ORR R0, #0x60                       @ Convert to lower case 
+    SUB R0, #0x6E                       @ Subtract lowercase 'n' 
+    LDMFD SP!, {LR}                     @ Pop used registers from the stack 
+    MOV PC, LR                          @ Return
 
 @@@@ print: Print a string to the terminal
 @ Parameters:
@@ -225,6 +248,8 @@ print_lose:
 
 prompt:           .asciz  "Guess a number between 0 and 0x7F:\n"            @ TASK: Modify the prompt to include the range of values
 .equ              prompt_len, 35
+again_prompt:           .asciz  "Do you want to play again?\n"            @ TASK: Modify the prompt to include the range of values
+.equ              again_prompt_len, 27
 higher:           .asciz  "Higher\n"
 .equ              higher_len, 7
 lower:            .asciz  "Lower\n"
