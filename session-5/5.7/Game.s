@@ -64,8 +64,8 @@ print:
         STMFD   SP!, {R7,LR}    	@ Push used registers and LR on the stack;
         MOV R2,R1                       @ Move number of characters to print(R1) to R2
         MOV R1, R0                      @ TASK: Move address of output string(R0) to R1
-        MOV R7, #4    			@ TASK: Put the Syscall number in R?
-        MOV R0, #1 		    	@ TASK: Put the monitor STDOUT in R?
+        MOV R7, #4    			@ TASK: Put the Syscall number in R7
+        MOV R0, #1 		    	@ TASK: Put the monitor STDOUT in R0
         SWI 0                 	        @ TASK: Uncomment this line to make the syscall
         LDMFD   SP!, {R7,LR}    	@ Restore used registers (update SP with !)
         MOV     PC, LR          	@ Return
@@ -82,7 +82,7 @@ read:
         MOV R1, R0               	@ TASK: Move address of input string(R0) to R1
         MOV R7, #3                        	@ TASK: Put the Syscall number in R?
         MOV R0, #0                        	@ TASK: Put the keyboard STDIN in R?
-        @SWI 0						@ TASK: Uncomment this line to make the syscall
+        SWI 0						@ TASK: Uncomment this line to make the syscall
         LDMFD SP!, {R7, LR}     	@ Restore used registers (update SP with !)
         MOV  PC, LR
 
@@ -142,7 +142,10 @@ numtoasc:
 @ Returns:
 @   R0: Integer value of provided character
 atoi:
-                                    @ TASK - add the missing code
+        CMP     R0, #0x40       	@ Compare with the character smaller than 'A/a'
+        SUBLT   R0, #0x30       	@ If in range 0-9, substract '0'
+        ORRGT   R0, #0x60       	@ If in range A-F or a-f, force lower case ...
+        SUBGT   R0, #0x57       	@ and substract 'a'-10                            @ TASK - add the missing code
         MOV     PC, LR
                 
 
@@ -152,7 +155,9 @@ atoi:
 @ Returns:   
 @   R0: related ASCII character ('0'-'9', 'A'-'F')
 itoa:
-                                    @ TASK - add the missing code
+        CMP     R0, #0x09       @ Compare the number with the number 9
+        ADDLS   R0, #0x30       @ If the number is <= 9, add the value of '0' to it
+        ADDGT   R0, #0x37       @ It the number is >9, adds the value of 'A'-10 to it
         MOV     PC, LR
 
 @@@@ gen_number: Generate a number based on the current time
@@ -161,18 +166,18 @@ itoa:
 @ Returns:  
 @   R0: 7-bit 'random' value
 gen_number:
-        STMFD   SP!, {R1,R7,LR}
-                                    @ TASK: Load address of time struct to R0
-                                    @ TASK: Load 0 into R1 (time zone)
-                                    @ TASK: Place system call number for gettimeofday in R7
-                                    @ TASK: Make the system call
-                                    @ TASK: Load a register with address of musecs variable
-                                    @ TASK: Load R0 with the value at address of musecs
-                                    @ TASK: Perform logical AND of R0 with bitmask 0111 1111 
+        STMFD   SP!, {R1,R7,R8, LR}
+        LDR R0, =time               @ TASK: Load address of time struct to R0
+        MOV R1, #0                  @ TASK: Load 0 into R1 (time zone)
+        MOV R7, #0x4E                 @ TASK: Place system call number for gettimeofday in R7
+        SWI 0                       @ TASK: Make the system call
+        LDR R8, =musecs             @ TASK: Load a register with address of musecs variable
+        LDR R0, [R8]             @ TASK: Load R0 with the value at address of musecs
+        AND R0, R0, #0x7F           @ TASK: Perform logical AND of R0 with bitmask 0111 1111 
                                     
-        MOV     R0, #30             @ Return a fixed value until executing on an RPI 
+        @ MOV     R0, #30             @ Return a fixed value until executing on an RPI 
                                     @ (and the system call can be executed)
-        LDMFD   SP!, {R1,R7,LR}
+        LDMFD   SP!, {R1,R7,R8,LR}
         MOV     PC, LR
 
 @@@@ print_hint:	Indicate whether the number is higher, lower or correct.
