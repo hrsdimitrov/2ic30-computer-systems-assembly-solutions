@@ -6,9 +6,9 @@
 
 .equ        RAND_LIMIT, 0xF     @ Question: What is the maximum value possible?
 .equ        SYS_EXIT,   0x1
-.equ        CLOCK_ADDR, 0xFE003004        @ TASK: Add clock hardware address constant
+.equ        CLOCK_ADDR, 0x7e003004        @ TASK: Add clock hardware address constant
                                           @ CLO at 0x3F003004 for older models
-                                          @ CLO at 0xFE003004 for newer
+                                          @ CLO at 0x7e003004 for raspberry pi 4
 .text 
 
 .include "Hardware.s"
