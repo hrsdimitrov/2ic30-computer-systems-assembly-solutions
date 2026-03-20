@@ -6,9 +6,9 @@
 
 .equ        RAND_LIMIT, 0xF     @ Question: What is the maximum value possible?
 .equ        SYS_EXIT,   0x1
-.equ        CLOCK_ADDR, 0x7e003004        @ TASK: Add clock hardware address constant
-                                          @ CLO at 0x3F003004 for older models
-                                          @ CLO at 0x7e003004 for raspberry pi 4
+.equ        CLOCK_ADDR, 0xFE003004        @ TASK: Add clock hardware address constant
+                                          @ CLO at 0x3F003004 for raspberry pi 3
+                                          @ CLO at 0xFE003004 for raspberry pi 4
 .text 
 
 .include "Hardware.s"
@@ -25,8 +25,10 @@ main:
 
 exit:
     LDR     R0, =clockbase      @ Load start address of map
+    LDR     R0, [R0] 
     BL      unmap               @ Unmap the access to hardware
     LDR     R0, =file_desc      @ TASK: Load the value of the file descriptor
+    LDR R0, [R0]
     BL      close_mem           @ Close /dev/mem
     MOV     R0, R8              @ Place random number in R0 (view on terminal with echo $?)
     MOV     R7, #SYS_EXIT       @ exit syscall
@@ -45,7 +47,7 @@ gen_number_hardware:
     LDR     R1, [R1]            @ Load mapped memory address contents
     CMP     R1, #0              @ Check if clockbase was initialized
     MOVEQ   R0, #RAND_LIMIT     @ If not initialized, return a fixed number.
-    LDRGT   R0, [R1, #4]        @ Otherwise, load hardware clock value.
+    LDRNE   R0, [R1, #4]        @ Otherwise, load hardware clock value.
     AND     R0, #RAND_LIMIT     @ Mask lower 7 bits
     LDMFD   SP!, {R1}
     MOV     PC, LR
