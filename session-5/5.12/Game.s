@@ -23,16 +23,16 @@ main:
 
         MOV   R8, R0            @ Store 'hidden' number in R8
         MOV   R9, #3            @ Initialise remaining guesses to 3
-        LDR R0, =new_game                        @ TASK: Load new game string
-        MOV R1, #new_game_len                        @ TASK: Load new game string length
+        LDR R0, =new_game       @ Load new game string
+        MOV R1, #new_game_len   @ Load new game string length
         BL    print             @ Print the new game string
 next_guess:
-        LDR R0, =prompt                        @ TASK: Load prompt string address
-        MOV R1, #prompt_len                        @ TASK: Load prompt length
+        LDR R0, =prompt         @ Load prompt string address
+        MOV R1, #prompt_len     @ Load prompt length
         BL    print             @ Print the prompt
 
-		LDR R0, =input 						@ TASK: Load input buffer address
-		MOV R1, #3						@ TASK: Load input buffer length
+		LDR R0, =input 			@ Load input buffer address
+		MOV R1, #3			    @ Load input buffer length
         BL    read				@ Read 3 chars to input buffer (including newline)
 
 	    LDR   R1, =input       
@@ -42,7 +42,7 @@ next_guess:
         BL    print_hint        @ Print a hint
 
         CMP   R10, R8           @ If the guess was correct,
-        BEQ   extra_game             @   go to ask for an extra game
+        BEQ   extra_game        @   go to ask for an extra game
         SUBS  R9, #1            @ ELSE Reduce the remaining guesses (!)
         BGT   next_guess        @ Try next guess if available
         MOV   R0, R8            @ Pass 'hidden' number as argument.
