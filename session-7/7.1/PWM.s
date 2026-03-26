@@ -35,30 +35,58 @@ main:
         CMP		R0, #0				@ If return value ... 
         BLT		exit				@	<0 (error) then exit
 
-        MOV R5, #10
-blink_loop:
-		
+        MOV		R0, #23 			@ Pin number
+        MOV		R1, #1				@ Code for output
+        BL		set_pin_function	@ Set pin to output
+        CMP		R0, #0				@ If return value ... 
+        BLT		exit	
+
+        MOV		R0, #24				@ Pin number
+        MOV		R1, #1				@ Code for output
+        BL		set_pin_function	@ Set pin to output
+        CMP		R0, #0				@ If return value ... 
+        BLT		exit
+
         MOV		R0, #22	            @ Pin number
-        MOV 	R1, #0x28		    @ Set (turn on LED)
-        BL		set_pin_value	    @ Turn on LED
+        MOV       	R1, #0x1C	    @ Set (turn on LED)
+        BL		set_pin_value	    @ Turn on LED	
 
-        LDR R0, =#delay
-        BL wait
 
-        MOV		R0, #22			    @ Pin number
+        MOV       R5, R5, LSL #3      @ R2 = 1000
+        MOV       R6, #60
+        MULS      R5, R5, R6	        @ Convert milliseconds to microseconds
+
+        LDR R3, =#on_time                   @on_time
+        LDR R4, =#total_delay               @off_time
+        SUB R4, R4, R3
+pwm_loop:
+		
+        MOV		R0, #23	            @ Pin number
         MOV 	R1, #0x1C		    @ Set (turn on LED)
         BL		set_pin_value	    @ Turn on LED
 
-        LDR R0, =#delay
+        MOV		R0, #24	            @ Pin number
+        MOV 	R1, #0x1C		    @ Set (turn on LED)
+        BL		set_pin_value	    @ Turn on LED
+
+        MOV R0, R3
+        BL wait
+
+        MOV		R0, #23	            @ Pin number
+        MOV 	R1, #0x28		    @ Set (turn on LED)
+        BL		set_pin_value	    @ Turn on LED
+
+        MOV		R0, #24	            @ Pin number
+        MOV 	R1, #0x28		    @ Set (turn on LED)
+        BL		set_pin_value	    @ Turn on LED
+
+        MOV R0, R4
         BL wait
 
         SUB R5, R5, #1
         CMP R5, #0
-        BGT blink_loop
+        BGT pwm_loop
         BLE exit
-
-
-
 
        
 exit:
@@ -186,7 +214,8 @@ ret:
 .data
 @@@@ Constants
 dev_mem:	.asciz "/dev/mem"
-.equ              delay, 1000
+.equ              total_delay, 1024
+.equ              on_time, 500      
 
 @@@@ Variables
 .align 4

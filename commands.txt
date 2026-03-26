@@ -1,1 +1,1 @@
-sudo gcc -g -o LED LED.s
+gcc -g -o LED LED.s
