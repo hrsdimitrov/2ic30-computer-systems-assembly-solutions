@@ -15,6 +15,11 @@
 .global main
 
 .equ        SYS_EXIT,   0x1
+.equ SYS_READ, 0x03
+.equ SYS_WRITE, 0x04
+.equ SYS_GETTIME, 0x4E
+.equ STDOUT, 1
+.equ STDIN, 0
 
 .equ		GPCLR0, 0x28			@ Value to set a GPIO pin to OFF
 .equ		GPSET0, 0x1C			@ Value to set a GPIO pin to ON
@@ -29,6 +34,11 @@ main:
 		BL	    map_io          	@ open /dev/mem and map hardware
     	BL	    init_pins
 
+		
+		BL determine_mode           @ Ask for mode.
+        CMP R0, #0              	@ IF answer is not '1'
+        BNE decremental_loop                	@   restart the game.
+
 		MOV	    R0, #0          	@ Value to display
     	BL	    disp_num			@ Call display number function
 
@@ -37,16 +47,40 @@ main:
 
 		MOV R5, #10 				@ Use R5 as counter, store 10
 		
-counter_loop:		
+incremental_loop:		
     	ADD R0, R0, #1         	@ Value to display
     	BL	    disp_num		@ Call the display number function
 
 		LDR R0, =#delay			@ Store delay in R0
         BL wait					@ Call wait function
 
+		SUB R5, R5, #1			@ Decrement counter
 		CMP R5, #0				@ Compare counter to 0
-        BGT counter_loop		@ If >= 0, continue loop
+        BGT incremental_loop		@ If >= 0, continue loop
         BLE exit				@ Else exit
+
+		LDR R0, =1023
+    	BL	    disp_num			@ Call display number function
+
+		LDR R0, =#delay				@ Store delay in R0
+        BL wait						@ Call wait function
+
+		MOV R5, #10 				@ Use R5 as counter, store 10
+
+	
+decremental_loop:
+		SUB R0, R0, #1 			@ Value to display
+    	BL	    disp_num		@ Call the display number function
+
+		LDR R0, =#delay			@ Store delay in R0
+        BL wait					@ Call wait function
+		
+		SUB R5, R5, #1			@ Decrement counter
+		CMP R5, #0				@ Compare counter to 0
+        BGT decremental_loop		@ If >= 0, continue loop
+        BLE exit				@ Else exit
+
+
 
 exit:
 		BL	    unmap_io        	@ unmap and close hardware addresses
@@ -54,6 +88,56 @@ exit:
 		SWI	    0
 
 @ Functions
+
+@@@@ determine_mode: Ask the user which mode they want to use.
+@ if the user enters '1' the selected mode is incremental, otherwise decremental
+determine_mode: 
+    STMFD SP!, {LR}                     @ Push used registers to the stack 
+    LDR R0, =mode_prompt                @ Load play again prompt reference 
+    MOV R1, #mode_prompt_len            @ Load play again prompt length 
+    BL    print                         @ Call print function 
+    LDR R0, =input                      @ Load the input reference 
+    MOV R1, #3                          @ Set the string length to read as 3 
+    BL read                             @ Call the input function 
+    LDR R1, =input                      @ Load the first byte of the inputted string to R0 - store the pointer to R1
+    LDR R0, [R1]                        @ Load the first byte of the inputted string to R0 - store the actual input in R0
+    AND R0, R0, #0xFF                   @ Load the first byte of the inputted string to R0 - take only the first bit by removing the last 3
+    SUB R0, #0x31                       @ Subtract character '1' 
+    LDMFD SP!, {LR}                     @ Pop used registers from the stack 
+    MOV PC, LR                          @ Return
+
+@@@@ print: Print a string to the terminal
+@ Parameters:
+@   R0: address of string
+@   R1: length of string
+@ Returns:
+@   none
+print:                      
+        STMFD   SP!, {R7,LR}    	@ Push used registers and LR on the stack;
+        MOV R2,R1                       @ Move number of characters to print(R1) to R2
+        MOV R1, R0                      @ TASK: Move address of output string(R0) to R1
+        MOV R7, #SYS_WRITE   			@ TASK: Put the Syscall number in R7
+        MOV R0, #STDOUT 		    	@ TASK: Put the monitor STDOUT in R0
+        SWI 0                 	        @ TASK: Uncomment this line to make the syscall
+        LDMFD   SP!, {R7,LR}    	@ Restore used registers (update SP with !)
+        MOV     PC, LR          	@ Return
+
+@@@@ read: read a string from keyboard and store in variable
+@ Parameters:
+@   R0: address of where to store string
+@   R1: number of characters to store
+@ Returns:
+@   none
+read:
+        STMFD SP!, {R7, LR}     	@ Push used registers and LR to stack
+        MOV R2,R1                   @ Move number of characters to read(R1) to R2
+        MOV R1, R0               	@ Move address of input string(R0) to R1
+        MOV R7, #SYS_READ           @ Put the Syscall number in R?
+        MOV R0, #STDIN              @ Put the keyboard STDIN in R?
+        SWI 0						@ Uncomment this line to make the syscall
+        LDMFD SP!, {R7, LR}     	@ Restore used registers (update SP with !)
+        MOV  PC, LR
+
 
 @@@@ disp_num : Function to display a number in binary on LEDS
 @ Parameters:
@@ -195,6 +279,11 @@ ret:	MOV     PC, LR
 
 .data
 @@@@ Constants
+
+mode_prompt:           .asciz  "Select mode (1-incremental; !1-decremental): "            @ TASK: Modify the prompt to include the range of values
+.equ              mode_prompt_len, 45
+
+
 dev_mem:	.asciz "/dev/mem"
 .equ              delay, 1000
 
@@ -216,7 +305,10 @@ disp_bits:
     .word   0x1000000          		@ bits[9]: GPI24  represents bit 9 (GP24 on GB)
  
 @@@@ Variables
-                            		
+.align
+input: .space 3   
+
+
 file_desc:  .word	0x0			    @ file descriptor
 clockbase:      .word 0x0           @ Add variable to store start of mapped hardware address
 gpiobase:	.word	0x0
