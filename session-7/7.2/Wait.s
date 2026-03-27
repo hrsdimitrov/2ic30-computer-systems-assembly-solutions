@@ -14,10 +14,10 @@ wait:
         STMFD	SP!, {R2-R5,LR}
         CMP	    R0, #0
         BLE	    wait_exit	        @ Don't wait zero or negative time.
-        MOV	    R2, #125
+        @ MOV	    R2, #125
         @ MOV	    R2, R2, LSL #3      @ R2 = 1000
         @ MULS    R0, R0, R2	        @ Convert milliseconds to microseconds
-        BVS	    wait_exit	        @ In case of an overflow, exit.
+        @ BVS	    wait_exit	        @ In case of an overflow, exit.
         LDR	    R3, =clockbase		@ Load clockbase address
         LDR	    R3, [R3]	        @ Load clockbase value
         LDR	    R2, [R3,#4]         @ Read current CLO value

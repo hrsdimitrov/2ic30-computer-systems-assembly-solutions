@@ -81,12 +81,9 @@ select_ratio:
         MOV       	R1, #0x1C	    @ Set (turn on LED)
         BL		set_pin_value	    @ Turn on LED	
 
-
-        MOV       R5, R5, LSL #3      @ R2 = 1000
-        MOV       R6, #60
-        MULS      R5, R5, R6	        @ Convert milliseconds to microseconds
-
-        LDR R4, =#total_delay               @off_time
+        LDR R5, =60000
+        
+        LDR R4, =total_delay               @off_time
         SUB R4, R4, R3
 pwm_loop:
 		
@@ -264,11 +261,11 @@ dev_mem:	.asciz "/dev/mem"
 
 .align 4
 brightness_ratios:
+    .word   0x64             		@ 100
     .word   0xC8             		@ 200
-    .word   0x190             		@ 400
-    .word   0x258                       @ 600
-    .word   0x320               	@ 800 
-    .word   0x3E8            		@ 1000
+    .word   0x12C                       @ 300
+    .word   0x190               	@ 400 
+    .word   0x1F4            		@ 500
     
 
 @@@@ Variables

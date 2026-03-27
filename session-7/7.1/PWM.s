@@ -22,12 +22,7 @@
 .include "Wait.s"
 
 main:                               
-        @ BL		open_mem		    @ Open /dev/mem
-        @ LDR		R0, =GPIO_ADDR	    @ Load hardware address to map
-        @ BL		map				    @ call mmap2
         BL map_io
-        @ LDR		R1, =gpiobase	    @ Store address of mapping
-        @ STR		R0, [R1]
 
         MOV		R0, #22				@ Pin number
         MOV		R1, #1				@ Code for output
@@ -51,13 +46,10 @@ main:
         MOV       	R1, #0x1C	    @ Set (turn on LED)
         BL		set_pin_value	    @ Turn on LED	
 
+        LDR R5, =60000
 
-        MOV       R5, R5, LSL #3      @ R2 = 1000
-        MOV       R6, #60
-        MULS      R5, R5, R6	        @ Convert milliseconds to microseconds
-
-        LDR R3, =#on_time                   @on_time
-        LDR R4, =#total_delay               @off_time
+        LDR R3, =on_time                   @on_time
+        LDR R4, =total_delay               @off_time
         SUB R4, R4, R3
 pwm_loop:
 		
@@ -214,8 +206,8 @@ ret:
 .data
 @@@@ Constants
 dev_mem:	.asciz "/dev/mem"
-.equ              total_delay, 1024
-.equ              on_time, 500      
+.equ              total_delay, 1000
+.equ              on_time, 100      
 
 @@@@ Variables
 .align 4
