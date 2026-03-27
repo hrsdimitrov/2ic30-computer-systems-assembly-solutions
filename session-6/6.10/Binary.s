@@ -28,7 +28,7 @@
 main:
 		BL	    map_io          	@ open /dev/mem and map hardware
     	BL	    init_pins
-    	MVN	    R0, #0          	@ Value to display
+    	MOV	    R0, #87          	@ Value to display
     	BL	    disp_num
 exit:
 		BL	    unmap_io        	@ unmap and close hardware addresses
