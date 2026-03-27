@@ -39,7 +39,8 @@ main:
         CMP R0, #0              	@ IF answer is not '1'
         BNE decremental_loop                	@   restart the game.
 
-		MOV	    R0, #0          	@ Value to display
+		MOV R4, #0
+		MOV	    R0, R4          	@ Value to display
     	BL	    disp_num			@ Call display number function
 
 		LDR R0, =#delay				@ Store delay in R0
@@ -48,7 +49,8 @@ main:
 		MOV R5, #10 				@ Use R5 as counter, store 10
 		
 incremental_loop:		
-    	ADD R0, R0, #1         	@ Value to display
+    	ADD R4, R4, #1         	@ Value to display
+		MOV R0, R4
     	BL	    disp_num		@ Call the display number function
 
 		LDR R0, =#delay			@ Store delay in R0
@@ -59,7 +61,8 @@ incremental_loop:
         BGT incremental_loop		@ If >= 0, continue loop
         BLE exit				@ Else exit
 
-		LDR R0, =1023
+		LDR R4, =1023
+		MOV R0, R4
     	BL	    disp_num			@ Call display number function
 
 		LDR R0, =#delay				@ Store delay in R0
@@ -69,7 +72,8 @@ incremental_loop:
 
 	
 decremental_loop:
-		SUB R0, R0, #1 			@ Value to display
+		SUB R4, R4, #1 			@ Value to display
+		MOV R0, R4
     	BL	    disp_num		@ Call the display number function
 
 		LDR R0, =#delay			@ Store delay in R0
