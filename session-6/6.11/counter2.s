@@ -32,14 +32,14 @@
 
 main:
 		BL	    map_io          	@ open /dev/mem and map hardware
-    	BL	    init_pins
+    	BL	    init_pins			@ Call the init_pins
 
 		
 		BL determine_mode           @ Ask for mode.
         CMP R0, #0              	@ IF answer is not '1'
-        BNE decremental_loop                	@   restart the game.
+        BNE decremental_setup       @   move to the decremental mode
 
-		MOV R4, #0
+		MOV R4, #0					@ Store the display value 
 		MOV	    R0, R4          	@ Value to display
     	BL	    disp_num			@ Call display number function
 
@@ -61,6 +61,7 @@ incremental_loop:
         BGT incremental_loop		@ If >= 0, continue loop
         BLE exit				@ Else exit
 
+decremental_setup:
 		LDR R4, =1023
 		MOV R0, R4
     	BL	    disp_num			@ Call display number function

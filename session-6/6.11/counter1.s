@@ -27,10 +27,10 @@
 
 main:
 		BL	    map_io          	@ open /dev/mem and map hardware
-    	BL	    init_pins
+    	BL	    init_pins			@ call init_pins function
 
-		MOV 	R4, #0
-		MOV	    R0, R4          	@ Value to display
+		MOV 	R4, #0				@ store initial display value to R4
+		MOV	    R0, R4          	@ Move the display value to the R0 param register
     	BL	    disp_num			@ Call display number function
 
 		LDR R0, =#delay				@ Store delay in R0
@@ -39,14 +39,14 @@ main:
 		MOV R5, #10 				@ Use R5 as counter, store 10
 		
 counter_loop:		
-    	ADD R4, R4, #1         	@ Value to display
-		MOV R0, R4
+    	ADD R4, R4, #1         	@ Increment the display value
+		MOV R0, R4				@ Move the display value to the R0 param register
     	BL	    disp_num		@ Call the display number function
 
 		LDR R0, =#delay			@ Store delay in R0
         BL wait					@ Call wait function
 
-		SUB R5, R5, #1
+		SUB R5, R5, #1			@ Subtract the counter
 
 		CMP R5, #0				@ Compare counter to 0
         BGT counter_loop		@ If >= 0, continue loop
